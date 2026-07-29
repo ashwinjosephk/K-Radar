@@ -114,24 +114,67 @@ PyQt5's own plugins immediately after `import cv2`:
   import open3d as o3d
 ```
 
-### 4.6 `cv2.imshow()` calls crash regardless of 4.5 — replace with `imwrite`
+### 4.6 `cv2.imshow()` calls crash regardless of 4.5 — replace with a native PyQt5 popup
 Even after 4.5, any `cv2.imshow()` call in this codebase still crashes the same way, because it's not
 actually a path problem — it's two independently-compiled Qt runtimes (cv2's bundled one and PyQt5's)
 both trying to own the platform integration in one process. There is no environment-level fix; the
-practical fix is to not use `cv2.imshow` inside a PyQt5 app at all. Affected, confirmed call sites:
+practical fix is to never let `cv2` touch Qt at all, and instead pop the image up using PyQt5's own
+`QLabel`/`QPixmap`, which stays inside the one Qt runtime the main GUI already owns.
+
+Add this helper once, near the top of both `uis/ui_vis.py` and `utils/util_dataset.py` (the latter
+can't import from the former, so it needs its own copy):
+```python
+def show_image_popup(cv_img, window_title='K-Radar Visualization'):
+    from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout
+    from PyQt5.QtGui import QImage, QPixmap
+    import cv2
+
+    rgb_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+    h, w, ch = rgb_img.shape
+    qimg = QImage(rgb_img.data, w, h, ch * w, QImage.Format_RGB888)
+
+    dialog = QDialog()
+    dialog.setWindowTitle(window_title)
+    label = QLabel()
+    label.setPixmap(QPixmap.fromImage(qimg))
+    layout = QVBoxLayout()
+    layout.addWidget(label)
+    dialog.setLayout(layout)
+    dialog.exec_()   # blocks until the window is closed, so sequential popups don't overlap
+```
+
+Then replace every `cv2.imshow(...)` / `cv2.waitKey(0)` pair with a single `show_image_popup(...)` call.
+Confirmed call sites:
 
 - `uis/ui_vis.py`, `pushButtonCameraVis` (~line 435):
 ```diff
 - cv2.imshow('front_iamge', cv_img)
 - cv2.waitKey(0)
 - cv2.destroyAllWindows()
-+ out_path = '/tmp/kradar_camera_vis.png'
-+ cv2.imwrite(out_path, cv_img)
-+ print(f"Saved camera visualization to {out_path}")
++ show_image_popup(cv_img, 'Camera Front Vis')
 ```
 
-- `utils/util_dataset.py`, `func_show_radar_tensor_bev` (~lines 118-129):
+- `utils/util_dataset.py`, `func_show_radar_tensor_bev` (~lines 58-129) — this function actually
+  produces three separate images worth seeing (two via `plt.savefig`, one via the final `cv2.imshow`
+  it originally had); pop up all three:
 ```diff
+  plt.savefig('./resources/imgs/img_tes_ra.png', bbox_inches='tight', pad_inches=0, dpi=300)
+
+  temp_img = cv2.imread('./resources/imgs/img_tes_ra.png')
+  temp_row, temp_col, _ = temp_img.shape
+  if not (temp_row == height and temp_col == width):
+      temp_img_new = cv2.resize(temp_img, (width, height), interpolation=cv2.INTER_CUBIC)
+      cv2.imwrite('./resources/imgs/img_tes_ra.png', temp_img_new)
++ show_image_popup(cv2.imread('./resources/imgs/img_tes_ra.png'), 'Range-Azimuth (raw jet)')
+
+  plt.close()
+  plt.pcolormesh(arr_0, arr_1, 10*np.log10(rdr_bev), cmap='jet')
+  plt.colorbar()
+  plt.savefig('./resources/imgs/plot_tes_ra.png', dpi=300)
++ show_image_popup(cv2.imread('./resources/imgs/plot_tes_ra.png'), 'Range-Azimuth (Polar, colorbar)')
+
+  ...
+
   if not (bboxes is None):
       arr_yx_bbox = arr_yx_bbox.transpose((1,0,2))
       arr_yx_bbox = np.flip(arr_yx_bbox, axis=(0,1))
@@ -144,18 +187,15 @@ practical fix is to not use `cv2.imshow` inside a PyQt5 app at all. Affected, co
 +     out_img = cv2.resize(arr_yx,(0,0),fx=2,fy=2)
 -
 - cv2.waitKey(0)
-+ cv2.imwrite('/tmp/kradar_radar_bev_cartesian.png', out_img)
-+ print("Saved radar BEV (Cartesian) to /tmp/kradar_radar_bev_cartesian.png")
++ show_image_popup(out_img, 'Radar BEV (Cartesian)')
 ```
 
 There are further un-patched `cv2.imshow` calls elsewhere in `utils/util_dataset.py` (CFAR
 visualization, radar-cube slicing tools) — same fix pattern applies if/when those functions are used.
 
-**Known gap / TODO:** this file-based workaround means every visualization button requires manually
-opening a saved PNG afterward instead of popping up inline. A cleaner fix (not yet implemented) would
-render results into the existing `QLabel` widgets the GUI already uses for the camera thumbnail
-preview, which stays inside PyQt5's own Qt runtime and avoids the collision entirely — no `cv2.imshow`
-or `cv2.imwrite`-and-reopen required.
+With this in place, clicking **Camera Front Vis** or **Radar Tensor Vis** pops up native windows
+directly (three, in sequence, for radar vis — close one to see the next), with no manual `xdg-open`
+or file-path juggling needed.
 
 ## 5. Dataset layout note
 If you extract sequence zips (e.g. `1.zip`) into a folder of the same name (e.g. `Scenes/1/`), you get
