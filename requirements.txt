@@ -1,11 +1,42 @@
-open3d==0.15.1
+# Requires Python 3.9 (not the originally-pinned 3.8.13 — see docs/ENVIRONMENT_SETUP.md for why).
+# Install with: pip install -r requirements.txt
+
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.1.2+cu121
+torchvision==0.16.2+cu121
+
+# Custom CUDA op — spconv-cu113 (original pin) no longer exists on PyPI.
+# spconv only ships cu114/cu118/cu121/cu124; pick to match your torch build above.
+spconv-cu121
+
+# numpy 2.0's ABI break breaks the opencv-python build below — keep <2 until that's updated too.
+numpy<2
+
+# Needed at build time for utils/Rotated_IoU/cuda_op and ops/ (torch.utils.cpp_extension imports
+# pkg_resources, which recent setuptools no longer vendors by default).
+setuptools<70
+
+# open3d==0.15.1 (original pin) was never published as a pip wheel — 0.15.2 is the closest match.
+# Only ships wheels for Python 3.8-3.9, which is part of why this env is capped at Python 3.9.
+open3d==0.15.2
+
 easydict
-tensorboard
-opencv-python==4.2.0.32
-spconv-cu113
-nms
-setuptools==59.5.0
+
+# opencv-python==4.2.0.32 (original pin) has no wheel for Python >=3.9 — 4.5.5.64 is functionally
+# equivalent for what this repo uses (cv2.imread/imwrite/resize/boxPoints — stable API since 3.x).
+opencv-python==4.5.5.64
+
 PyQt5
 scikit-image
 numba
 einops
+matplotlib
+scipy
+tqdm
+tensorboard
+
+# Rotated-box NMS used by models/head/rdr_spcube_head.py.
+# Needs a code-level patch to work as K-Radar calls it — see docs/ENVIRONMENT_SETUP.md section 4.2/4.3.
+nms
+
+SharedArray
