@@ -39,6 +39,24 @@ from pipelines.pipeline_detection_v1_0 import PipelineDetection_v1_0 as Pipeline
 path_ui = '%s/uis/ui_vis.ui' % '.' # cnf.BASE_DIR
 class_ui = uic.loadUiType(path_ui)[0]
 
+def show_image_popup(cv_img, window_title='K-Radar Visualization'):
+    from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout
+    from PyQt5.QtGui import QImage, QPixmap
+    import cv2
+
+    rgb_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+    h, w, ch = rgb_img.shape
+    qimg = QImage(rgb_img.data, w, h, ch * w, QImage.Format_RGB888)
+
+    dialog = QDialog()
+    dialog.setWindowTitle(window_title)
+    label = QLabel()
+    label.setPixmap(QPixmap.fromImage(qimg))
+    layout = QVBoxLayout()
+    layout.addWidget(label)
+    dialog.setLayout(layout)
+    dialog.exec_()
+
 class MainFrame(QMainWindow, class_ui):
     def __init__(self, cfg):
         super().__init__()
@@ -433,8 +451,9 @@ class MainFrame(QMainWindow, class_ui):
 
         cv_img = cv2.addWeighted(cv_img, alpha, cv_img_ori, 1 - alpha, 0)
         out_path = '/tmp/kradar_camera_vis.png'
-        cv2.imwrite(out_path, cv_img)
-        print(f"Saved camera visualization to {out_path}")
+        # cv2.imwrite(out_path, cv_img)
+        # print(f"Saved camera visualization to {out_path}")
+        show_image_popup(cv_img, 'Camera Front Vis')
     
     def pushButtonLidarVis(self):
         if self.dict_datum is None:

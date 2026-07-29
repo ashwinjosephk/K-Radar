@@ -37,6 +37,24 @@ __all__ = [ 'func_show_radar_tensor_bev', \
             'func_save_occupied_bev_map',
             ]
 
+def show_image_popup(cv_img, window_title='K-Radar Visualization'):
+    from PyQt5.QtWidgets import QDialog, QLabel, QVBoxLayout
+    from PyQt5.QtGui import QImage, QPixmap
+    import cv2
+
+    rgb_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+    h, w, ch = rgb_img.shape
+    qimg = QImage(rgb_img.data, w, h, ch * w, QImage.Format_RGB888)
+
+    dialog = QDialog()
+    dialog.setWindowTitle(window_title)
+    label = QLabel()
+    label.setPixmap(QPixmap.fromImage(qimg))
+    layout = QVBoxLayout()
+    layout.addWidget(label)
+    dialog.setLayout(layout)
+    dialog.exec_()
+
 def func_show_radar_tensor_bev(p_pline, dict_item, bboxes=None, \
         roi_x = [0, 0.4, 100], roi_y = [-50, 0.4, 50], is_return_bbox_bev_tensor=False, alpha=0.9, lthick=1, infer=None, infer_gt=None, norm_img=None):
     rdr_tensor = p_pline.get_tesseract(dict_item['meta']['path_rdr_tesseract'])
@@ -58,6 +76,7 @@ def func_show_radar_tensor_bev(p_pline, dict_item, bboxes=None, \
     plt.tight_layout()
     plt.subplots_adjust(left = 0, bottom = 0, right = 1, top = 1, hspace = 0, wspace = 0)
     plt.savefig('./resources/imgs/img_tes_ra.png', bbox_inches='tight', pad_inches=0, dpi=300)
+    show_image_popup(cv2.imread('./resources/imgs/img_tes_ra.png'), 'Range-Azimuth (raw jet)')
     
     temp_img = cv2.imread('./resources/imgs/img_tes_ra.png')
     temp_row, temp_col, _ = temp_img.shape
@@ -69,6 +88,7 @@ def func_show_radar_tensor_bev(p_pline, dict_item, bboxes=None, \
     plt.pcolormesh(arr_0, arr_1, 10*np.log10(rdr_bev), cmap='jet')
     plt.colorbar()
     plt.savefig('./resources/imgs/plot_tes_ra.png', dpi=300)
+    show_image_popup(cv2.imread('./resources/imgs/plot_tes_ra.png'), 'Range-Azimuth (Polar, colorbar)')
 
     # Polar to Cartesian (Should flip image)
     ra = cv2.imread('./resources/imgs/img_tes_ra.png')
@@ -126,8 +146,9 @@ def func_show_radar_tensor_bev(p_pline, dict_item, bboxes=None, \
         arr_yx = np.flip(arr_yx_bbox, axis=(0,1))
         out_img = cv2.resize(arr_yx,(0,0),fx=2,fy=2)
 
-    cv2.imwrite('/tmp/kradar_radar_bev_cartesian.png', out_img)
-    print("Saved radar BEV (Cartesian) to /tmp/kradar_radar_bev_cartesian.png")
+    # cv2.imwrite('/tmp/kradar_radar_bev_cartesian.png', out_img)
+    # print("Saved radar BEV (Cartesian) to /tmp/kradar_radar_bev_cartesian.png")
+    show_image_popup(out_img, 'Radar BEV (Cartesian)')
 
 def func_show_lidar_point_cloud(p_pline, dict_item, bboxes=None, \
         roi_x=[0, 100], roi_y=[-50, 50], roi_z=[-10, 10]):
@@ -151,7 +172,7 @@ def func_show_lidar_point_cloud(p_pline, dict_item, bboxes=None, \
                 [4, 5], [6, 7], #[5, 6],[4, 7],
                 [0, 4], [1, 5], [2, 6], [3, 7],
                 [0, 2], [1, 3], [4, 6], [5, 7]]
-        colors_bbox = [p_pline.cfg.VIS.DIC_CLASS_RGB[cls_name] for _ in range(len(lines))]
+        colors_bbox = [p_pline.cfg.VIS.CLASS_RGB[cls_name] for _ in range(len(lines))]
 
     line_sets_bbox = []
     for gt_obj in bboxes_o3d:
@@ -594,7 +615,7 @@ def func_show_rdr_pc_cube(p_pline, dict_item, bboxes=None, cfar_params = [25, 8,
                     [4, 5], [6, 7], #[5, 6],[4, 7],
                     [0, 4], [1, 5], [2, 6], [3, 7],
                     [0, 2], [1, 3], [4, 6], [5, 7]]
-            colors_bbox = [p_pline.cfg.VIS.DIC_CLASS_RGB[cls_name] for _ in range(len(lines))]
+            colors_bbox = [p_pline.cfg.VIS.CLASS_RGB[cls_name] for _ in range(len(lines))]
 
         line_sets_bbox = []
         for gt_obj in bboxes_o3d:
