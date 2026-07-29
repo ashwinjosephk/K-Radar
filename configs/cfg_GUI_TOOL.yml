@@ -14,7 +14,8 @@ DATASET:
   DIR:
     ### Server room 1 ###
     # The directory order may affect the performance due to sampling order
-    LIST_DIR: ['/media/ave/HDD_4_1/gen_2to5', '/media/ave/HDD_4_1/radar_bin_lidar_bag_files/generated_files', '/media/ave/e95e0722-32a4-4880-a5d5-bb46967357d6/radar_bin_lidar_bag_files/generated_files', '/media/ave/4f089d0e-7b60-493d-aac7-86ead9655194/radar_bin_lidar_bag_files/generated_files']
+    # LIST_DIR: ['/media/ave/HDD_4_1/gen_2to5', '/media/ave/HDD_4_1/radar_bin_lidar_bag_files/generated_files', '/media/ave/e95e0722-32a4-4880-a5d5-bb46967357d6/radar_bin_lidar_bag_files/generated_files', '/media/ave/4f089d0e-7b60-493d-aac7-86ead9655194/radar_bin_lidar_bag_files/generated_files']
+    LIST_DIR:  ['/media/fraunhofer/Volume/Ashwin/KAIST Dataset/Scenes/1']
     DIR_DOPPLER_CB: '/media/ave/e78bd5a4-c129-4564-aa97-2e14a886444c/doppler_data_from_SB' # Total 2.2 TB
     DIR_SPARSE_CB: '/media/ave/HDD_4_1/dir_sp_rdr_cube'
     ### Server room 1 ###

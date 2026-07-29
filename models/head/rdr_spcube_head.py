@@ -7,7 +7,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import nms
+import nms.nms as nms
 
 from utils.Rotated_IoU.oriented_iou_loss import cal_iou
 

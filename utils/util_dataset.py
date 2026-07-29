@@ -10,6 +10,8 @@
 
 import numpy as np
 import cv2
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os.path as osp
 import open3d as o3d
@@ -118,15 +120,14 @@ def func_show_radar_tensor_bev(p_pline, dict_item, bboxes=None, \
     if not (bboxes is None):
         arr_yx_bbox = arr_yx_bbox.transpose((1,0,2))
         arr_yx_bbox = np.flip(arr_yx_bbox, axis=(0,1))
-        cv2.imshow('Cartesian (bbox)', cv2.resize(arr_yx_bbox,(0,0),fx=4,fy=4))
+        out_img = cv2.resize(arr_yx_bbox,(0,0),fx=4,fy=4)
     else:
         arr_yx = arr_yx.transpose((1,0,2))
         arr_yx = np.flip(arr_yx_bbox, axis=(0,1))
-        cv2.imshow('Cartesian (bbox)', cv2.resize(arr_yx,(0,0),fx=2,fy=2))
+        out_img = cv2.resize(arr_yx,(0,0),fx=2,fy=2)
 
-    # cv2.imshow('Front image', cv2.imread(dict_item['meta']['path_cam_front'])[:,:1280,:])
-    # plt.show()
-    cv2.waitKey(0)
+    cv2.imwrite('/tmp/kradar_radar_bev_cartesian.png', out_img)
+    print("Saved radar BEV (Cartesian) to /tmp/kradar_radar_bev_cartesian.png")
 
 def func_show_lidar_point_cloud(p_pline, dict_item, bboxes=None, \
         roi_x=[0, 100], roi_y=[-50, 50], roi_z=[-10, 10]):

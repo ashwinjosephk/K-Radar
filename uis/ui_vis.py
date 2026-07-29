@@ -14,6 +14,10 @@ import os
 from PyQt5 import QtGui
 import numpy as np
 import cv2
+import PyQt5
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = os.path.join(
+    os.path.dirname(PyQt5.__file__), 'Qt5', 'plugins', 'platforms'
+)
 import open3d as o3d
 import yaml
 from easydict import EasyDict
@@ -417,7 +421,8 @@ class MainFrame(QMainWindow, class_ui):
                     p2_y = int(np.round(p2_y))
 
                     if self.checkBox_color.isChecked():
-                        color = self.cfg.VIS.DIC_CLASS_BGR[cls_name]
+                        # color = self.cfg.VIS.DIC_CLASS_BGR[cls_name]
+                        color = self.cfg.VIS.CLASS_BGR[cls_name]
                     else:
                         color = (0, 255, 0)
                     
@@ -427,9 +432,9 @@ class MainFrame(QMainWindow, class_ui):
         # getattr(self, 'label_frontImg').setPixmap(temp_front_img)
 
         cv_img = cv2.addWeighted(cv_img, alpha, cv_img_ori, 1 - alpha, 0)
-        cv2.imshow('front_iamge', cv_img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        out_path = '/tmp/kradar_camera_vis.png'
+        cv2.imwrite(out_path, cv_img)
+        print(f"Saved camera visualization to {out_path}")
     
     def pushButtonLidarVis(self):
         if self.dict_datum is None:
@@ -622,8 +627,9 @@ class MainFrame(QMainWindow, class_ui):
         # getattr(self, 'label_frontImg').setPixmap(temp_front_img)
 
         cv_img = cv2.addWeighted(cv_img, alpha, cv_img_ori, 1 - alpha, 0)
-        cv2.imshow('front_iamge', cv_img)
-        cv2.waitKey(0)
+        out_path = '/tmp/kradar_camera_vis.png'
+        cv2.imwrite(out_path, cv_img)
+        print(f"Saved camera visualization to {out_path}")
         cv2.destroyAllWindows()
 
     def pushButtonInfLidar(self):
