@@ -44,7 +44,7 @@ def show_image_popup(cv_img, window_title='K-Radar Visualization'):
 
     rgb_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
     h, w, ch = rgb_img.shape
-    qimg = QImage(rgb_img.data, w, h, ch * w, QImage.Format_RGB888)
+    qimg = QImage(rgb_img.data, w, h, ch * w, QImage.Format_RGB888).copy()
 
     dialog = QDialog()
     dialog.setWindowTitle(window_title)

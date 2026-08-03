@@ -1139,7 +1139,9 @@ if __name__ == '__main__':
     import yaml
     from easydict import EasyDict
 
-    path_cfg = './configs/sparse_rdr_data_generation/cfg_gen_wider_rtnh_1p.yml'
+    # path_cfg = './configs/sparse_rdr_data_generation/cfg_gen_wider_rtnh_1p.yml'
+    path_cfg = './configs/sparse_rdr_data_generation/cfg_gen_wider_rtnh_5p.yml'
+    # path_cfg = './configs/sparse_rdr_data_generation/cfg_gen_wider_rtnh_10p.yml'
 
     f = open(path_cfg, 'r')
     try:

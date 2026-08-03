@@ -634,9 +634,9 @@ class KRadarDetection_v1_0(Dataset):
     ### 4D DRAE Radar Tensor (i.e., Tesseract) ###
 
     ### Lidar Point Cloud ###
-    # def show_lidar_point_cloud(self, dict_item, bboxes=None, \
-    #         roi_x=[0, 100], roi_y=[-50, 50], roi_z=[-10, 10]):
-    #     func_show_lidar_point_cloud(self, dict_item, bboxes, roi_x, roi_y, roi_z)
+    def show_lidar_point_cloud(self, dict_item, bboxes=None, \
+            roi_x=[0, 100], roi_y=[-50, 50], roi_z=[-10, 10]):
+        func_show_lidar_point_cloud(self, dict_item, bboxes, roi_x, roi_y, roi_z)
 
     ### Radar Cube ### (TBD: Update to main_vis.py version)
     # To use radar cube functions, GET_ITEM['rdr_cube'] = True

@@ -1,21 +1,52 @@
 ### ----- General ----- ###
 GENERAL:
-  NAME: 'Visualzation GUI configuration'
+  NAME: 'RTNH'
+  COMMENT1: 'Driving corridor, LR 0.001~0.0001'
+  COMMENT2: 'Adam'
+  VERSION: '1.1'
+  SEED: 202206
+  IS_CUDA_SEED: False
+  IS_DETERMINISTIC: True
   DEVICE: 'gpu'
+  RESUME:
+    IS_RESUME: False
+    PATH_EXP: # None
+    START_EP: # None
+    IS_COPY_LOGS: True
+
+  LOGGING:
+    IS_LOGGING: True
+    PATH_LOGGING: './logs'
+    IS_SAVE_MODEL: True
+    INTERVAL_EPOCH_MODEL: 1
+    INTERVAL_EPOCH_UTIL: 5
 ### ----- General ----- ###
 
-### ----- Dataset ----- ###
-DATASET:
-  NAME: 'KRadarDetection_v1_0'
-  TYPE_LOADING: 'path' # in ['dict','path']
+### ----- Sparse Data ----- ###
+# For v1.1
+SPARSE_DATA:
+  NAME: 'rtnh_wider_1p_1'
+  HEADER: 'sprdr'
+  COMMENT: 'quantile -> roi'
+  SAVE_FOLDER: '/media/fraunhofer/Volume/Ashwin/KAIST Dataset/my_sparse_gen'
 
+  NORM_VAL: 1e+13
+  QUANTILE_RATE: 0.01
+# RDR_CUBE.GENERATE_SPARSE_CUBE for v1 
+### ----- Sparse Data ----- ###
+
+### ----- Dataset ----- ###
+# Frequently change: [TYPE_COORD, LABEL.ROI_CONSIDER_TYPE, GET_ITEM]
+DATASET:
+  NAME: 'KRadarDetection_v1_1'
+  TYPE_LOADING: 'path' # in ['dict','path']
+  
   NUM: # Total number of frames, just make this blank
 
   DIR:
     ### Server room 1 ###
     # The directory order may affect the performance due to sampling order
-    # LIST_DIR: ['/media/ave/HDD_4_1/gen_2to5', '/media/ave/HDD_4_1/radar_bin_lidar_bag_files/generated_files', '/media/ave/e95e0722-32a4-4880-a5d5-bb46967357d6/radar_bin_lidar_bag_files/generated_files', '/media/ave/4f089d0e-7b60-493d-aac7-86ead9655194/radar_bin_lidar_bag_files/generated_files']
-    LIST_DIR:  ['/media/fraunhofer/Volume/Ashwin/KAIST Dataset/Scenes/1']
+    LIST_DIR: ['/media/fraunhofer/Volume/Ashwin/KAIST Dataset/Scenes/1']
     DIR_DOPPLER_CB: '/media/ave/e78bd5a4-c129-4564-aa97-2e14a886444c/doppler_data_from_SB' # Total 2.2 TB
     DIR_SPARSE_CB: '/media/ave/HDD_4_1/dir_sp_rdr_cube'
     ### Server room 1 ###
@@ -90,6 +121,7 @@ DATASET:
     ARR_Y: # automatically consider, just make this blank
     ARR_X: # automatically consider, just make this blank
 
+    # For v1.0
     GENERATE_SPARSE_CUBE:
       # Saving sp cube
       NAME_SPARSE_CUBE: 'sp_rdr_cube'
@@ -118,9 +150,9 @@ DATASET:
 
   LPC:
     ROI: {
-      'z': [-2, 6.0],   # Dim: [m] / [-2.0, 6.0] for Driving corridor / None (erase)
-      'y': [-6.4, 6.4], # Dim: [m] / [-6.4, 6.4] for Driving corridor
-      'x': [0, 72.0],   # Dim: [m] / [0.0, 72.0] for Driving corridor
+      'z': [-4, 8.0],     # Dim: [m] / [-2.0, 6.0] for Driving corridor / None (erase)
+      'y': [-60.0, 60.0], # Dim: [m] / [-6.4, 6.4] for Driving corridor
+      'x': [0, 120.0],    # Dim: [m] / [0.0, 72.0] for Driving corridor
     } # LPC ROI is based on coordinate after calibration
   
   CLASS_INFO:
@@ -148,11 +180,11 @@ DATASET:
 
   # List of items to be returned by the dataloader
   GET_ITEM: {
-    'rdr_sparse_cube'   : True,
+    'rdr_sparse_cube'   : False,
     'rdr_tesseract'     : False,
     'rdr_cube'          : False,
     'rdr_cube_doppler'  : False,
-    'ldr_pc_64'         : True,
+    'ldr_pc_64'         : False,
     'cam_front_img'     : False,
   }
 ### ----- Dataset ----- ###
