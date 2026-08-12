@@ -19,6 +19,9 @@ what broke and why, the verified working dependency versions, and every code pat
   made this possible)
 - `main_test_0.py` — RTNH_wide pretrained inference, GT (gray) vs. predicted (colored) boxes in
   an Open3D viewer
+- `rtnh_standalone_infer.py` (this fork only, not upstream) — RTNH inference/visualization
+  without `PipelineDetection_v1_0`'s train/eval machinery: BEV point-cloud+box plots, camera
+  projection, feature extraction, an interactive Open3D viewer — see below
 - `datasets/kradar_detection_v1_1.py` — sparse radar cube generation from raw `radar_zyx_cube`,
   at arbitrary quantile densities (see below)
 
@@ -85,6 +88,53 @@ Ground truth, specifically — there are two unrelated kinds, don't confuse them
 | `configs/sparse_rdr_data_generation/cfg_gen_wider_rtnh_*p.yml` | `DATASET.DIR.LIST_DIR` | `Scenes/1` |
 | `configs/sparse_rdr_data_generation/cfg_gen_wider_rtnh_*p.yml` | `SPARSE_DATA.SAVE_FOLDER` | `my_sparse_gen` |
 | `main_test_0.py` | `PATH_MODEL` | `RTNH_wide_10.pt` |
+| `rtnh_standalone_infer.py` | `--ckpt` | `RTNH_wide_10.pt` |
+
+## Standalone inference / visualization script
+
+`rtnh_standalone_infer.py` (repo root, alongside `main_test_0.py`; this fork only). Runs RTNH
+inference without `PipelineDetection_v1_0`'s optimizer/scheduler/tensorboard/KITTI-eval
+machinery, which `main_test_0.py` pulls in even for a single inference pass. Rebuilds only
+config → dataset → network → `load_state_dict`, calling the same devkit functions the pipeline
+calls internally, then stops there.
+
+```bash
+python rtnh_standalone_infer.py \
+    --cfg configs/cfg_RTNH_wide.yml \
+    --ckpt "<your data root>/RTNH_wide_10.pt" \
+    --idx 0 \
+    --combined
+```
+
+### Modes
+
+| Flags | Output |
+|---|---|
+| `--extract-bev-feat` | dumps `dict_item['bev_feat']` — the BEV feature map *before* the detection head, shape `(1, 768, Y, X)` for `cfg_RTNH_wide.yml` — to `bev_feat_idx{N}.pt` |
+| `--extract-bev-feat --visualize` | + a channel-mean/channel-max heatmap PNG of it |
+| `--visualize-detections` | top-down (BEV) plot: radar sparse points + GT boxes (green) + predictions above `--conf-thr` (red) → `detections_bev_idx{N}.png` |
+| `--project-cam` | the same boxes projected onto a camera image → `detections_cam_idx{N}.png`. Camera frame auto-resolved from the sample's own metadata (label header's `camf` index) under a `cam-front/` folder; override with `--cam-img <path>` |
+| `--combined` | BEV + camera panels side by side, one PNG → `detections_combined_idx{N}.png` |
+| `--open3d-interactive` | real, rotatable Open3D window (lidar point cloud + boxes), same interaction as `main_test_0.py`'s viewer — but GT/predictions are colored green/red here instead of by class. Blocks until closed; needs an actual display session |
+| *(none of the above)* | just runs inference once and prints the output dict's keys |
+
+The detection modes can be combined freely in one run
+(e.g. `--project-cam --combined --open3d-interactive` together), and all of them print a
+console summary of every GT box and every raw prediction — not just the ones above
+`--conf-thr` — with score and distance to the nearest GT box, for telling a genuine miss apart
+from a confidence-threshold cutoff.
+
+### Known caveats
+
+- **Camera calibration is per-sequence** (`info_calib/`, see Dataset layout above), not shipped
+  in this git repo. `--project-cam` defaults to `utils/util_calib.py`'s `dict_front0`, an
+  illustrative example that can be off by a few cm/degrees for your actual sequence. Pass
+  `--calib-yml <path>` with the real per-sequence calibration for an accurate overlay.
+- **No off-screen/headless Open3D capture.** An off-screen render (`create_window(visible=False)`
+  + `capture_screen_image()`) was tried for a script-friendly PNG instead of a blocking window;
+  on this environment it captured the live desktop instead of the render — a known-unreliable
+  combo on Linux, driver/window-manager dependent. Dropped in favor of `--open3d-interactive`,
+  which opens a real window and works correctly, but needs a display session (not plain SSH).
 
 ## Original K-Radar documentation
 
